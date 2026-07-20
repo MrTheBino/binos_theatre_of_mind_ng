@@ -75,3 +75,42 @@ See [CLAUDE.md](CLAUDE.md) (project guide), [ARCHITECTURE.md](ARCHITECTURE.md)
 
 Source, issues and releases live at
 <https://github.com/MrTheBino/binos_theatre_of_mind_ng>.
+
+
+
+## Building & releasing
+
+There is no compile step — the module ships its source directly. A release is
+produced entirely by the GitHub Actions workflow
+[`.github/workflows/main.yml`](.github/workflows/main.yml), triggered whenever a
+**version tag is pushed**. The workflow creates the GitHub release itself.
+
+The workflow:
+
+1. Derives the module version from the pushed tag, stripping an optional leading
+   `v` (`v0.1.0` and `0.1.0` both yield version `0.1.0`).
+2. Rewrites `version`, `url`, `manifest` and `download` in `module.json` so the
+   manifest auto-updates from the *latest* release and the download points at
+   this tag's `module.zip`.
+3. Bundles `module.json`, `scripts/`, `templates/`, `styles/`, `lang/`, `assets/`
+   and `README.md` into `module.zip`.
+4. Creates the release for the tag and attaches `module.json` and `module.zip`.
+
+**Cutting a release**
+
+1. Bump `version` in `module.json` (optional — the workflow overwrites it from the
+   tag, but keeping it in sync avoids confusion in the repo). Commit and push.
+2. Create and push a version tag. The tag **may or may not** start with `v` — both
+   `v0.1.0` and `0.1.0` work; the module version and the download URL adapt to
+   whichever form you use:
+
+   ```
+   git tag 0.1.0
+   git push origin 0.1.0
+   ```
+
+   The workflow triggers on tags matching `v*` or `[0-9]*`.
+
+3. The push runs the workflow, which packages the assets and publishes the
+   release. The install manifest URL (`releases/latest/download/module.json`)
+   stays stable across releases.

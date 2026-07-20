@@ -1,17 +1,25 @@
-name: Release Module
+name: Release
 
-# Publish a Foundry VTT module release whenever a GitHub release is created.
-# The tag drives the version and the download URL; the manifest always points
-# at the "latest" release so Foundry can auto-update.
+# Publishes the Foundry VTT module when a version tag is pushed.
+# Distribution is via GitHub Releases only (not the Foundry package hub).
+#
+# Usage:
+#   1. Bump "version" in module.json (optional — the tag is the source of truth).
+#   2. git tag 1.2.3 && git push origin 1.2.3   (a leading "v" is also accepted)
+#
+# The workflow rewrites module.json's version/url/manifest/download fields,
+# zips the module, and attaches module.json + module.zip to a GitHub Release.
+# Install/auto-update in Foundry uses the "latest release" manifest URL:
+#   https://github.com/<owner>/<repo>/releases/latest/download/module.json
+
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
+      - "[0-9]*"
 
 permissions:
   contents: write
-
-env:
-  REPO_URL: https://github.com/MrTheBino/binos_theatre_of_mind_ng
 
 jobs:
   release:
@@ -20,44 +28,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Strip a leading "v" from the tag (v0.1.0 -> 0.1.0) for the module version.
-      - name: Resolve version
-        id: version
-        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - name: Derive version and URLs
+        id: meta
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "url=${REPO_URL}" >> "$GITHUB_OUTPUT"
+          echo "manifest=${REPO_URL}/releases/latest/download/module.json" >> "$GITHUB_OUTPUT"
+          echo "download=${REPO_URL}/releases/download/${GITHUB_REF_NAME}/module.zip" >> "$GITHUB_OUTPUT"
 
-      # Rewrite version + manifest/download URLs in module.json to match this tag.
-      # jq is preinstalled on ubuntu-latest.
-      - name: Patch module.json
-        env:
-          VERSION: ${{ steps.version.outputs.value }}
-          TAG: ${{ github.event.release.tag_name }}
+      - name: Inject metadata into module.json
         run: |
           jq \
-            --arg version "$VERSION" \
-            --arg url "$REPO_URL" \
-            --arg manifest "$REPO_URL/releases/latest/download/module.json" \
-            --arg download "$REPO_URL/releases/download/$TAG/module.zip" \
+            --arg version "${{ steps.meta.outputs.version }}" \
+            --arg url      "${{ steps.meta.outputs.url }}" \
+            --arg manifest "${{ steps.meta.outputs.manifest }}" \
+            --arg download "${{ steps.meta.outputs.download }}" \
             '.version = $version | .url = $url | .manifest = $manifest | .download = $download' \
             module.json > module.json.tmp
           mv module.json.tmp module.json
           cat module.json
 
-      # Bundle everything Foundry needs into module.zip (source + assets, no repo cruft).
       - name: Create module.zip
         run: |
           zip -r module.zip \
             module.json \
-            scripts/ \
-            templates/ \
-            styles/ \
-            lang/ \
-            assets/ \
-            README.md \
-            -x '*.git*'
+            scripts \
+            templates \
+            styles \
+            lang \
+            assets \
+            README.md
 
-      - name: Attach release assets
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          name: ${{ steps.meta.outputs.version }}
+          tag_name: ${{ github.ref_name }}
           files: |
             module.json
             module.zip
+          fail_on_unmatched_files: true
