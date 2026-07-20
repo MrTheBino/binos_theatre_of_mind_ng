@@ -1,0 +1,63 @@
+name: Release Module
+
+# Publish a Foundry VTT module release whenever a GitHub release is created.
+# The tag drives the version and the download URL; the manifest always points
+# at the "latest" release so Foundry can auto-update.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+env:
+  REPO_URL: https://github.com/MrTheBino/binos_theatre_of_mind_ng
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Strip a leading "v" from the tag (v0.1.0 -> 0.1.0) for the module version.
+      - name: Resolve version
+        id: version
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # Rewrite version + manifest/download URLs in module.json to match this tag.
+      # jq is preinstalled on ubuntu-latest.
+      - name: Patch module.json
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          jq \
+            --arg version "$VERSION" \
+            --arg url "$REPO_URL" \
+            --arg manifest "$REPO_URL/releases/latest/download/module.json" \
+            --arg download "$REPO_URL/releases/download/$TAG/module.zip" \
+            '.version = $version | .url = $url | .manifest = $manifest | .download = $download' \
+            module.json > module.json.tmp
+          mv module.json.tmp module.json
+          cat module.json
+
+      # Bundle everything Foundry needs into module.zip (source + assets, no repo cruft).
+      - name: Create module.zip
+        run: |
+          zip -r module.zip \
+            module.json \
+            scripts/ \
+            templates/ \
+            styles/ \
+            lang/ \
+            assets/ \
+            README.md \
+            -x '*.git*'
+
+      - name: Attach release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            module.json
+            module.zip

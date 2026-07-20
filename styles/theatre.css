@@ -1,0 +1,1273 @@
+/* ---------------------------------------- */
+/* Theatre of mind overlay — cinematic look */
+/* ---------------------------------------- */
+
+/* Sits above the canvas but below the Foundry interface.
+   If the overlay ever covers UI elements, lower this z-index;
+   if the canvas shines through UI chrome, raise it. */
+#tom-overlay {
+  --tom-accent: #d4af37;
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  overflow: hidden;
+  background: #000;
+  animation: tom-overlay-in 0.45s ease-out;
+}
+
+#tom-overlay.closing {
+  animation: tom-overlay-out 0.45s ease-in forwards;
+}
+
+@keyframes tom-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes tom-overlay-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ---- Backdrop stage with crossfade + Ken Burns drift ---- */
+
+#tom-overlay .tom-stage {
+  position: absolute;
+  inset: 0;
+}
+
+#tom-overlay .tom-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  border: none;
+}
+
+#tom-overlay .tom-backdrop.current {
+  animation: tom-backdrop-in 1.2s ease forwards;
+}
+
+#tom-overlay.fx-kenburns .tom-backdrop.current {
+  animation:
+    tom-backdrop-in 1.2s ease forwards,
+    tom-kenburns 55s ease-in-out infinite alternate;
+}
+
+#tom-overlay .tom-backdrop.fading-out {
+  opacity: 1;
+  animation: tom-backdrop-out 1.2s ease forwards;
+}
+
+@keyframes tom-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes tom-backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes tom-kenburns {
+  from { transform: scale(1) translate3d(0, 0, 0); }
+  to   { transform: scale(1.08) translate3d(0.6%, -0.6%, 0); }
+}
+
+/* ---- Weather / particle layer ---- */
+
+#tom-overlay .tom-weather {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#tom-overlay .tom-weather::before,
+#tom-overlay .tom-weather::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+
+/* Rain: two streak layers at different speeds/sizes for depth */
+#tom-overlay .tom-weather.weather-rain::before,
+#tom-overlay .tom-weather.weather-rain::after {
+  display: block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='256'%3E%3Cg stroke='%23cdddff' stroke-width='1.3' stroke-linecap='round'%3E%3Cline x1='14' y1='6' x2='10' y2='34'/%3E%3Cline x1='47' y1='58' x2='43' y2='86'/%3E%3Cline x1='89' y1='22' x2='85' y2='50'/%3E%3Cline x1='118' y1='120' x2='114' y2='148'/%3E%3Cline x1='28' y1='160' x2='24' y2='188'/%3E%3Cline x1='66' y1='200' x2='62' y2='228'/%3E%3Cline x1='100' y1='170' x2='96' y2='198'/%3E%3Cline x1='8' y1='218' x2='4' y2='246'/%3E%3Cline x1='76' y1='98' x2='72' y2='126'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+#tom-overlay .tom-weather.weather-rain::before {
+  opacity: 0.45;
+  background-size: 128px 256px;
+  animation: tom-fall-y 0.55s linear infinite;
+}
+
+#tom-overlay .tom-weather.weather-rain::after {
+  opacity: 0.28;
+  background-size: 90px 180px;
+  animation: tom-fall-y-sm 0.38s linear infinite;
+}
+
+/* Snow: drifting dot layers with a gentle sway */
+#tom-overlay .tom-weather.weather-snow::before,
+#tom-overlay .tom-weather.weather-snow::after {
+  display: block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cg fill='%23ffffff'%3E%3Ccircle cx='20' cy='30' r='2.2' opacity='.9'/%3E%3Ccircle cx='70' cy='80' r='1.6' opacity='.7'/%3E%3Ccircle cx='120' cy='40' r='2.8' opacity='.85'/%3E%3Ccircle cx='180' cy='120' r='1.4' opacity='.6'/%3E%3Ccircle cx='230' cy='60' r='2' opacity='.8'/%3E%3Ccircle cx='40' cy='150' r='1.8' opacity='.7'/%3E%3Ccircle cx='90' cy='200' r='2.4' opacity='.85'/%3E%3Ccircle cx='150' cy='230' r='1.5' opacity='.6'/%3E%3Ccircle cx='210' cy='180' r='2.6' opacity='.9'/%3E%3Ccircle cx='246' cy='236' r='1.8' opacity='.7'/%3E%3Ccircle cx='10' cy='220' r='1.3' opacity='.5'/%3E%3Ccircle cx='140' cy='140' r='1.2' opacity='.5'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+#tom-overlay .tom-weather.weather-snow::before {
+  opacity: 0.85;
+  background-size: 256px 256px;
+  animation: tom-fall-y 11s linear infinite, tom-sway-x 7s ease-in-out infinite alternate;
+}
+
+#tom-overlay .tom-weather.weather-snow::after {
+  opacity: 0.45;
+  background-size: 180px 180px;
+  animation: tom-fall-y-sm 16s linear infinite, tom-sway-x 9s ease-in-out infinite alternate-reverse;
+}
+
+/* Fog: seamless turbulence clouds drifting in opposite directions.
+   baseFrequency must be an integer number of periods per tile (4/512 =
+   0.0078125), otherwise stitchTiles cannot hide the tile edges. The blur
+   masks the 1px stitch seam some Chromium versions still produce. */
+#tom-overlay .tom-weather.weather-fog::before,
+#tom-overlay .tom-weather.weather-fog::after {
+  display: block;
+  inset: -24px;
+  filter: blur(3px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0078125' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.82 0 0 0 0 0.86 0 0 0 0 0.95 0.9 0 0 0 -0.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+#tom-overlay .tom-weather.weather-fog::before {
+  opacity: 0.5;
+  background-size: 700px 700px;
+  animation: tom-drift-x 80s linear infinite;
+}
+
+#tom-overlay .tom-weather.weather-fog::after {
+  opacity: 0.3;
+  background-size: 1100px 1100px;
+  animation: tom-drift-x-rev 130s linear infinite;
+}
+
+/* Embers: warm particles rising with a sway, additive blend */
+#tom-overlay .tom-weather.weather-embers::before,
+#tom-overlay .tom-weather.weather-embers::after {
+  display: block;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cg%3E%3Ccircle cx='20' cy='30' r='1.8' fill='%23ffb347' opacity='.9'/%3E%3Ccircle cx='70' cy='80' r='1.2' fill='%23ff7a29' opacity='.7'/%3E%3Ccircle cx='120' cy='40' r='2.2' fill='%23ffd08a' opacity='.8'/%3E%3Ccircle cx='180' cy='120' r='1' fill='%23ff8c3b' opacity='.6'/%3E%3Ccircle cx='230' cy='60' r='1.6' fill='%23ffb347' opacity='.8'/%3E%3Ccircle cx='40' cy='150' r='1.4' fill='%23ff9e4d' opacity='.7'/%3E%3Ccircle cx='90' cy='200' r='2' fill='%23ffca7a' opacity='.85'/%3E%3Ccircle cx='150' cy='230' r='1.1' fill='%23ff7a29' opacity='.6'/%3E%3Ccircle cx='210' cy='180' r='1.9' fill='%23ffbe66' opacity='.85'/%3E%3Ccircle cx='12' cy='222' r='1' fill='%23ff8c3b' opacity='.5'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+#tom-overlay .tom-weather.weather-embers::before {
+  opacity: 0.8;
+  background-size: 256px 256px;
+  animation: tom-rise-y 13s linear infinite, tom-sway-x 6s ease-in-out infinite alternate;
+}
+
+#tom-overlay .tom-weather.weather-embers::after {
+  opacity: 0.45;
+  background-size: 170px 170px;
+  animation: tom-rise-y-sm 19s linear infinite, tom-sway-x 8s ease-in-out infinite alternate-reverse;
+}
+
+/* Blood: dark streaks creep down from the top edge, sparse drops fall */
+#tom-overlay .tom-weather.weather-blood::before {
+  display: block;
+  inset: 0 0 auto 0;
+  height: 60vh;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='512'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%237a0f12' stop-opacity='.95'/%3E%3Cstop offset='.8' stop-color='%235a0a0e' stop-opacity='.8'/%3E%3Cstop offset='1' stop-color='%235a0a0e' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg fill='url(%23g)'%3E%3Crect x='18' width='7' height='210' rx='3.5'/%3E%3Crect x='52' width='10' height='330' rx='5'/%3E%3Crect x='90' width='6' height='150' rx='3'/%3E%3Crect x='122' width='9' height='420' rx='4.5'/%3E%3Crect x='160' width='5' height='120' rx='2.5'/%3E%3Crect x='188' width='8' height='260' rx='4'/%3E%3Crect x='224' width='6' height='180' rx='3'/%3E%3C/g%3E%3Cg fill='%236a0d0f'%3E%3Ccircle cx='21.5' cy='206' r='5'/%3E%3Ccircle cx='57' cy='326' r='6.5'/%3E%3Ccircle cx='126.5' cy='414' r='6'/%3E%3Ccircle cx='192' cy='256' r='5.5'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 256px 100%;
+  background-repeat: repeat-x;
+  background-position: top;
+  transform-origin: top;
+  opacity: 0.85;
+  animation: tom-blood-creep 16s ease-in-out infinite alternate;
+}
+
+#tom-overlay .tom-weather.weather-blood::after {
+  display: block;
+  opacity: 0.7;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cg fill='%237a0f12'%3E%3Cellipse cx='40' cy='60' rx='2.6' ry='5.5' opacity='.9'/%3E%3Cellipse cx='140' cy='150' rx='2' ry='4.5' opacity='.7'/%3E%3Cellipse cx='210' cy='90' rx='2.8' ry='6' opacity='.85'/%3E%3Cellipse cx='90' cy='220' rx='1.8' ry='4' opacity='.6'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  animation: tom-fall-y 6.5s linear infinite;
+}
+
+@keyframes tom-blood-creep {
+  from { transform: scaleY(0.93); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes tom-fall-y { from { background-position-y: 0; } to { background-position-y: 256px; } }
+@keyframes tom-fall-y-sm { from { background-position-y: 0; } to { background-position-y: 180px; } }
+@keyframes tom-rise-y { from { background-position-y: 0; } to { background-position-y: -256px; } }
+@keyframes tom-rise-y-sm { from { background-position-y: 0; } to { background-position-y: -170px; } }
+@keyframes tom-sway-x { from { background-position-x: 0; } to { background-position-x: 20px; } }
+@keyframes tom-drift-x { from { background-position-x: 0; } to { background-position-x: 700px; } }
+@keyframes tom-drift-x-rev { from { background-position-x: 0; } to { background-position-x: -1100px; } }
+
+/* ---- Color moods (stage filter + tint layer) ---- */
+
+#tom-overlay .tom-stage {
+  transition: filter 1.2s ease;
+}
+
+#tom-overlay .tom-mood {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+#tom-overlay.mood-cold .tom-stage {
+  filter: saturate(0.75) brightness(0.85) hue-rotate(-10deg);
+}
+
+#tom-overlay.mood-cold .tom-mood {
+  opacity: 1;
+  background: linear-gradient(180deg, rgba(50, 80, 140, 0.18), rgba(15, 30, 70, 0.3));
+}
+
+#tom-overlay.mood-sepia .tom-stage {
+  filter: sepia(0.65) contrast(1.05) brightness(0.92);
+}
+
+#tom-overlay.mood-sepia .tom-mood {
+  opacity: 1;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(40, 25, 5, 0.35) 100%);
+}
+
+#tom-overlay.mood-frenzy .tom-stage {
+  filter: saturate(1.25) contrast(1.12) brightness(0.9);
+}
+
+#tom-overlay.mood-frenzy .tom-mood {
+  opacity: 1;
+  background: radial-gradient(ellipse at center, rgba(120, 0, 0, 0.12) 0%, rgba(90, 0, 0, 0.32) 100%);
+  animation: tom-frenzy 3.2s ease-in-out infinite;
+}
+
+@keyframes tom-frenzy {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+#tom-overlay.mood-dream .tom-stage {
+  filter: blur(2.5px) saturate(0.85) brightness(1.08);
+}
+
+#tom-overlay.mood-dream .tom-mood {
+  opacity: 1;
+  background: radial-gradient(ellipse at center, rgba(255, 250, 240, 0.1) 0%, rgba(200, 190, 230, 0.16) 100%);
+}
+
+/* Hunger: world drains of color, a blood vignette pulses in a heartbeat */
+#tom-overlay.mood-hunger .tom-stage {
+  filter: saturate(0.3) sepia(0.12) brightness(0.78) contrast(1.12);
+}
+
+#tom-overlay.mood-hunger .tom-mood {
+  opacity: 1;
+  background: radial-gradient(ellipse at center,
+    transparent 28%,
+    rgba(120, 0, 0, 0.4) 74%,
+    rgba(60, 0, 0, 0.72) 100%);
+  animation: tom-heartbeat 2.4s linear infinite;
+}
+
+@keyframes tom-heartbeat {
+  0% { opacity: 0.5; }
+  7% { opacity: 1; }
+  15% { opacity: 0.55; }
+  22% { opacity: 0.92; }
+  34% { opacity: 0.5; }
+  100% { opacity: 0.5; }
+}
+
+/* Elysium: warm golden candlelight with an irregular flicker */
+#tom-overlay.mood-elysium .tom-stage {
+  filter: sepia(0.35) saturate(1.1) brightness(0.95);
+}
+
+#tom-overlay.mood-elysium .tom-mood {
+  opacity: 1;
+  background: radial-gradient(ellipse at 50% 68%,
+    rgba(255, 190, 90, 0.18) 0%,
+    rgba(140, 85, 15, 0.12) 45%,
+    rgba(15, 8, 0, 0.45) 100%);
+  animation: tom-candle 4.6s ease-in-out infinite;
+}
+
+@keyframes tom-candle {
+  0%, 100% { opacity: 0.92; }
+  11% { opacity: 1; }
+  23% { opacity: 0.86; }
+  37% { opacity: 0.97; }
+  49% { opacity: 0.83; }
+  64% { opacity: 1; }
+  78% { opacity: 0.89; }
+  90% { opacity: 0.98; }
+}
+
+/* Blood moon: crimson night, a red glow hangs high in the sky */
+#tom-overlay.mood-bloodmoon .tom-stage {
+  filter: sepia(0.3) saturate(1.2) brightness(0.82) contrast(1.08);
+}
+
+#tom-overlay.mood-bloodmoon .tom-mood {
+  opacity: 1;
+  background: radial-gradient(circle at 72% 10%,
+    rgba(255, 70, 45, 0.3) 0%,
+    rgba(150, 25, 20, 0.18) 28%,
+    rgba(45, 0, 0, 0.52) 100%);
+  animation: tom-bloodmoon 12s ease-in-out infinite alternate;
+}
+
+@keyframes tom-bloodmoon {
+  from { opacity: 0.9; }
+  to { opacity: 1; }
+}
+
+/* Sunset: golden-hour warmth fading into violet dusk */
+#tom-overlay.mood-sunset .tom-stage {
+  filter: sepia(0.18) saturate(1.3) brightness(0.96) contrast(1.03);
+}
+
+#tom-overlay.mood-sunset .tom-mood {
+  opacity: 1;
+  background: linear-gradient(180deg,
+    rgba(255, 130, 60, 0.22) 0%,
+    rgba(255, 90, 110, 0.15) 42%,
+    rgba(70, 25, 70, 0.38) 100%);
+}
+
+/* Vampiric night: deep blue-violet darkness with pale moonlight from above */
+#tom-overlay.mood-vampnight .tom-stage {
+  filter: saturate(0.6) brightness(0.62) contrast(1.15) hue-rotate(-15deg);
+}
+
+#tom-overlay.mood-vampnight .tom-mood {
+  opacity: 1;
+  background:
+    radial-gradient(ellipse at 50% -10%,
+      rgba(150, 170, 220, 0.14) 0%,
+      transparent 40%),
+    linear-gradient(180deg,
+      rgba(25, 20, 60, 0.35) 0%,
+      rgba(35, 10, 45, 0.45) 60%,
+      rgba(8, 5, 25, 0.65) 100%);
+}
+
+/* ---- Parallax smoothing ---- */
+
+#tom-overlay.fx-parallax .tom-stage {
+  transition: filter 1.2s ease, transform 0.5s ease-out;
+  will-change: transform;
+}
+
+#tom-overlay.fx-parallax .tom-actors {
+  transition: transform 0.6s ease-out;
+}
+
+/* ---- Cinematic title card ---- */
+
+#tom-overlay .tom-title {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8vw;
+  pointer-events: none;
+  opacity: 0;
+  font-family: "Modesto Condensed", "Signika", serif;
+  font-size: clamp(2.5rem, 7vw, 7rem);
+  font-variant: small-caps;
+  letter-spacing: 0.18em;
+  text-align: center;
+  color: #f3ead7;
+  text-shadow:
+    0 0 28px color-mix(in srgb, var(--tom-accent) 60%, transparent),
+    0 4px 16px #000;
+}
+
+#tom-overlay .tom-title.playing {
+  animation: tom-title 5.2s ease forwards;
+}
+
+@keyframes tom-title {
+  0% {
+    opacity: 0;
+    letter-spacing: 0.32em;
+    transform: scale(1.05);
+  }
+  14% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+    letter-spacing: 0.16em;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    letter-spacing: 0.15em;
+  }
+}
+
+/* ---- Atmosphere layers ---- */
+
+#tom-overlay .tom-vignette {
+  position: absolute;
+  inset: 0;
+  display: none;
+  background:
+    radial-gradient(ellipse at center,
+      transparent 42%,
+      rgba(0, 0, 0, 0.28) 72%,
+      rgba(0, 0, 0, 0.72) 100%);
+}
+
+#tom-overlay.fx-vignette .tom-vignette {
+  display: block;
+}
+
+#tom-overlay .tom-grain {
+  position: absolute;
+  inset: -100px;
+  display: none;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: tom-grain 0.9s steps(4) infinite;
+}
+
+#tom-overlay.fx-grain .tom-grain {
+  display: block;
+}
+
+@keyframes tom-grain {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-38px, 22px); }
+  50%  { transform: translate(24px, -30px); }
+  75%  { transform: translate(-16px, -12px); }
+  100% { transform: translate(0, 0); }
+}
+
+#tom-overlay .tom-letterbox {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 5.5vh;
+  display: none;
+  background: #000;
+  z-index: 2;
+}
+
+#tom-overlay.fx-letterbox .tom-letterbox {
+  display: block;
+}
+
+#tom-overlay .tom-letterbox.top {
+  top: 0;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+}
+
+#tom-overlay .tom-letterbox.bottom {
+  bottom: 0;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.55);
+}
+
+/* ---- Actor strip ---- */
+
+#tom-overlay .tom-actors {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+/* A faction row, vertically centered on its configured stage height */
+#tom-overlay .tom-group {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0 4rem;
+}
+
+/* The default row behaves like the classic full-stage strip */
+#tom-overlay .tom-group.tom-group-default {
+  inset: 0;
+  transform: none;
+  padding: 8vh 4rem;
+  display: block;
+}
+
+#tom-overlay .tom-group.tom-group-default .tom-group-actors {
+  height: 100%;
+}
+
+#tom-overlay .tom-group-actors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--tom-gap, 16px);
+}
+
+/* Faction label: smaller sibling of the name plates */
+#tom-overlay .tom-group-label {
+  width: max-content;
+  font-family: "Modesto Condensed", "Signika", serif;
+  font-size: 1.1rem;
+  font-variant: small-caps;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  color: color-mix(in srgb, var(--tom-accent) 55%, #f3ead7 45%);
+  background: rgba(10, 8, 6, 0.75);
+  border: 1px solid color-mix(in srgb, var(--tom-accent) 55%, transparent);
+  border-radius: 999px;
+  padding: 0.3em 1.1em 0.25em;
+  text-shadow: 0 1px 2px #000;
+}
+
+#tom-overlay .tom-actor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  /* Foundry core stretches <figure> to 100% width — keep items shrink-wrapped */
+  width: max-content;
+  flex: 0 0 auto;
+  opacity: 0;
+  animation: tom-actor-in 0.7s cubic-bezier(0.22, 0.9, 0.32, 1.2) forwards;
+}
+
+@keyframes tom-actor-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.92);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Settled portraits stay visible without a running animation, so moving
+   their DOM node (reorder) cannot replay the entrance. Must precede .leaving. */
+#tom-overlay .tom-actor.settled {
+  opacity: 1;
+  animation: none;
+}
+
+#tom-overlay .tom-actor.leaving {
+  animation: tom-actor-out 0.55s ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes tom-actor-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(26px) scale(0.9);
+    filter: blur(4px);
+  }
+}
+
+/* Speaking spotlight: the speaker pulses, everyone else recedes */
+#tom-overlay .tom-actor {
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+#tom-overlay .tom-actors.has-speaker .tom-actor:not(.speaking) {
+  opacity: 0.55;
+  filter: saturate(0.6) brightness(0.75);
+}
+
+#tom-overlay .tom-actor.speaking .tom-portrait {
+  animation: tom-speaking 2.4s ease-in-out infinite;
+}
+
+#tom-overlay .tom-actor.speaking .tom-name {
+  border-color: var(--tom-accent);
+  color: #fff;
+}
+
+@keyframes tom-speaking {
+  0%, 100% {
+    box-shadow:
+      0 0 18px color-mix(in srgb, var(--tom-accent) 50%, transparent),
+      0 10px 30px rgba(0, 0, 0, 0.65);
+  }
+  50% {
+    box-shadow:
+      0 0 42px color-mix(in srgb, var(--tom-accent) 90%, transparent),
+      0 10px 30px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* Effective portrait size: global size × group factor × actor factor */
+#tom-overlay .tom-actor {
+  --tom-psize: calc(var(--tom-size, 140px) * var(--tom-group-scale, 1) * var(--tom-actor-scale, 1));
+}
+
+/* Gilded portrait frame: accent ring + dark inset + soft ambient glow */
+#tom-overlay .tom-portrait {
+  position: relative;
+  width: var(--tom-psize);
+  height: var(--tom-psize);
+}
+
+/* Upright card format: 3:4 ratio instead of 1:1 */
+#tom-overlay.shape-portrait .tom-portrait {
+  height: calc(var(--tom-psize) * 1.35);
+}
+
+#tom-overlay .tom-portrait {
+  border-radius: var(--tom-radius, 50%);
+  padding: var(--tom-border-width, 3px);
+  background:
+    linear-gradient(155deg,
+      color-mix(in srgb, var(--tom-accent) 70%, #fff 30%) 0%,
+      var(--tom-accent) 35%,
+      color-mix(in srgb, var(--tom-accent) 45%, #000 55%) 100%);
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--tom-accent) 45%, transparent),
+    0 10px 30px rgba(0, 0, 0, 0.65);
+}
+
+#tom-overlay .tom-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: inherit;
+  border: 2px solid rgba(0, 0, 0, 0.85);
+  background: #111;
+  display: block;
+}
+
+/* All portraits react to hover (for the dwell preview)... */
+#tom-overlay .tom-actor .tom-portrait {
+  pointer-events: auto;
+}
+
+/* ...but only clickable ones (permission) open the character sheet */
+#tom-overlay .tom-actor.clickable .tom-portrait {
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+#tom-overlay .tom-actor.clickable .tom-portrait:hover {
+  transform: translateY(-6px) scale(1.04);
+  box-shadow:
+    0 0 28px color-mix(in srgb, var(--tom-accent) 70%, transparent),
+    0 14px 36px rgba(0, 0, 0, 0.7);
+}
+
+/* Name plate: dark pill, accent hairline, cinematic small-caps serif */
+#tom-overlay .tom-name {
+  font-family: "Modesto Condensed", "Signika", serif;
+  font-size: var(--tom-name-size, 18px);
+  font-variant: small-caps;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  color: #f3ead7;
+  background: linear-gradient(180deg, rgba(12, 10, 8, 0.88), rgba(24, 20, 14, 0.88));
+  border: 1px solid color-mix(in srgb, var(--tom-accent) 45%, transparent);
+  border-radius: 999px;
+  padding: 0.35em 1em 0.3em;
+  max-width: calc(var(--tom-psize, 140px) * 2.1);
+  text-align: center;
+  line-height: 1.2;
+  /* Long names wrap onto a second line before being ellipsed */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px #000;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+}
+
+/* ---- Hover portrait preview (dwell to open, move away to close) ---- */
+
+#tom-overlay .tom-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1.8rem;
+  padding: 0 6vw;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  background: radial-gradient(ellipse at center,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.8) 100%);
+  transition: opacity 0.35s ease, visibility 0.35s;
+}
+
+#tom-overlay .tom-preview.text-left {
+  flex-direction: row-reverse;
+}
+
+#tom-overlay .tom-preview-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  flex: none;
+}
+
+#tom-overlay .tom-preview.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+#tom-overlay .tom-preview-frame {
+  padding: 7px;
+  border-radius: 20px;
+  background:
+    linear-gradient(155deg,
+      color-mix(in srgb, var(--tom-accent) 70%, #fff 30%) 0%,
+      var(--tom-accent) 35%,
+      color-mix(in srgb, var(--tom-accent) 45%, #000 55%) 100%);
+  box-shadow:
+    0 0 42px color-mix(in srgb, var(--tom-accent) 55%, transparent),
+    0 24px 70px rgba(0, 0, 0, 0.8);
+  transform: scale(0.93) translateY(10px);
+  transition: transform 0.4s cubic-bezier(0.22, 0.9, 0.32, 1.15);
+}
+
+#tom-overlay .tom-preview.open .tom-preview-frame {
+  transform: scale(1) translateY(0);
+}
+
+#tom-overlay .tom-preview-frame img {
+  display: block;
+  max-width: 46vw;
+  max-height: 64vh;
+  min-width: 240px;
+  border-radius: 15px;
+  border: 2px solid rgba(0, 0, 0, 0.85);
+  background: #111;
+  object-fit: contain;
+}
+
+#tom-overlay .tom-preview-name {
+  /* Larger than the stage plates, but driven by the same per-scene setting */
+  font-size: calc(var(--tom-name-size, 18px) * 1.6);
+  max-width: 70vw;
+}
+
+/* Campaign Codex text panel beside the enlarged portrait */
+#tom-overlay .tom-preview-text {
+  display: none;
+  flex: 0 1 30vw;
+  max-height: 64vh;
+  overflow: hidden;
+  padding: 1.1rem 1.4rem 2rem;
+  background: linear-gradient(180deg, rgba(14, 11, 8, 0.92), rgba(24, 19, 13, 0.92));
+  border: 1px solid color-mix(in srgb, var(--tom-accent) 45%, transparent);
+  border-radius: 14px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.65);
+  color: #eae2d0;
+  font-family: "Signika", sans-serif;
+  font-size: 15.5px;
+  line-height: 1.55;
+  /* Not scrollable by design (pointer-events none) — long texts fade out */
+  mask-image: linear-gradient(180deg, #000 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent 100%);
+}
+
+#tom-overlay .tom-preview.has-text .tom-preview-text {
+  display: block;
+  opacity: 0;
+  animation: tom-text-in 0.55s ease 0.12s forwards;
+}
+
+#tom-overlay .tom-preview.text-left .tom-preview-text {
+  animation-name: tom-text-in-left;
+}
+
+@keyframes tom-text-in {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes tom-text-in-left {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+#tom-overlay .tom-preview-text h1,
+#tom-overlay .tom-preview-text h2,
+#tom-overlay .tom-preview-text h3 {
+  font-family: "Modesto Condensed", "Signika", serif;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--tom-accent) 55%, #f3ead7 45%);
+  border-bottom: 1px solid color-mix(in srgb, var(--tom-accent) 35%, transparent);
+  padding-bottom: 0.2em;
+  margin: 0.6em 0 0.4em;
+}
+
+#tom-overlay .tom-preview-text h1:first-child,
+#tom-overlay .tom-preview-text h2:first-child,
+#tom-overlay .tom-preview-text h3:first-child,
+#tom-overlay .tom-preview-text p:first-child {
+  margin-top: 0;
+}
+
+#tom-overlay .tom-preview-text p {
+  margin: 0.45em 0;
+}
+
+#tom-overlay .tom-preview-text img {
+  max-width: 100%;
+  border: none;
+}
+
+#tom-overlay .tom-preview-text a.content-link,
+#tom-overlay .tom-preview-text a.inline-roll {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: color-mix(in srgb, var(--tom-accent) 40%, transparent);
+  color: inherit;
+}
+
+/* ---- GM stage drag & drop between group rows ---- */
+
+#tom-overlay .tom-actor[draggable="true"] {
+  cursor: grab;
+}
+
+#tom-overlay.tom-dragging .tom-group {
+  pointer-events: auto;
+}
+
+#tom-overlay.tom-dragging .tom-group:not(.tom-group-default) {
+  outline: 2px dashed color-mix(in srgb, var(--tom-accent) 50%, transparent);
+  outline-offset: 6px;
+  border-radius: 8px;
+  min-height: 3rem;
+}
+
+#tom-overlay.tom-dragging .tom-group.tom-group-default {
+  outline: 2px dashed rgba(255, 255, 255, 0.15);
+  outline-offset: -12px;
+  border-radius: 8px;
+}
+
+#tom-overlay.tom-dragging .tom-group.drop-hover {
+  outline-style: solid;
+  background: color-mix(in srgb, var(--tom-accent) 10%, transparent);
+}
+
+/* ---------------------------------------- */
+/* Manager application                      */
+/* ---------------------------------------- */
+
+/* Fixed-height window: header + tab nav stay put, the active tab scrolls.
+   Scroll positions are preserved across re-renders via PARTS `scrollable`. */
+.tom-manager .window-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tom-manager .window-content > header,
+.tom-manager .window-content > nav.tabs {
+  flex: 0 0 auto;
+}
+
+.tom-manager .window-content section.tab.active {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden auto;
+  padding-right: 0.35rem;
+}
+
+.tom-manager .tom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tom-manager .tom-enable.enabled {
+  background: var(--color-warm-2, #c9593f);
+  color: #fff;
+}
+
+.tom-manager fieldset {
+  margin-bottom: 0.5rem;
+}
+
+.tom-manager nav.tabs {
+  margin-bottom: 0.5rem;
+}
+
+.tom-manager .tab {
+  padding: 0.25rem 0;
+}
+
+.tom-manager .tom-list {
+  list-style: none;
+  margin: 0 0 0.5rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tom-manager .tom-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+
+.tom-manager .tom-list .tom-actor-row,
+.tom-manager .tom-backdrops .tom-list li {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.tom-manager .tom-list li.is-speaking .tom-actor-row .name {
+  color: var(--color-text-emphatic, #fff);
+  font-weight: bold;
+}
+
+.tom-manager .tom-list li button.active {
+  background: var(--color-warm-2, #c9593f);
+  color: #fff;
+}
+
+.tom-manager .tom-actor-details {
+  border-left: 2px solid var(--color-border-light-tertiary, #444);
+  margin-left: 1rem;
+  padding-left: 0.75rem;
+}
+
+.tom-manager .tom-actor-details .form-group {
+  margin: 0.25rem 0;
+}
+
+.tom-manager .tom-actor-details button {
+  width: auto;
+  padding: 0 0.5rem;
+}
+
+.tom-manager .tom-backdrops input.name {
+  flex: 1;
+}
+
+/* ---- Backdrops as a card grid ---- */
+
+.tom-manager .tom-backdrop-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.tom-manager .tom-backdrop-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border-light-tertiary, #444);
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tom-manager .tom-backdrop-card.active {
+  outline: 2px solid var(--color-border-highlight, #ff6400);
+  outline-offset: -2px;
+}
+
+.tom-manager .tom-backdrop-card .thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: none;
+  display: block;
+}
+
+.tom-manager .tom-backdrop-card input.name {
+  margin: 0.35rem 0.4rem 0.25rem;
+  width: calc(100% - 0.8rem);
+}
+
+.tom-manager .tom-backdrop-card .tom-card-actions {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0 0.4rem 0.4rem;
+}
+
+.tom-manager .tom-backdrop-card .tom-card-actions button {
+  flex: 1;
+  height: 1.9rem;
+  line-height: 1;
+}
+
+.tom-manager .tom-backdrop-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 120px;
+  height: auto;
+  border: 2px dashed var(--color-border-light-tertiary, #555);
+  border-radius: 6px;
+  background: transparent;
+  opacity: 0.8;
+}
+
+.tom-manager .tom-backdrop-add:hover {
+  opacity: 1;
+  border-color: var(--color-border-highlight, #ff6400);
+}
+
+.tom-manager .tom-backdrop-add i {
+  font-size: 1.6em;
+}
+
+/* Preset rows are plain horizontal rows (no expandable part) */
+.tom-manager .tom-presets .tom-list li {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---- Presets: save & copy side by side ---- */
+
+.tom-manager .tom-preset-sources {
+  align-items: stretch;
+  margin-bottom: 0.25rem;
+}
+
+.tom-manager .tom-preset-sources fieldset {
+  margin-bottom: 0;
+}
+
+.tom-manager .tom-preset-sources .tom-field {
+  gap: 0.4rem;
+}
+
+.tom-manager .tom-drop-hint {
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+.tom-manager .tom-group-config {
+  border: 1px solid var(--color-border-light-tertiary, #444);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.tom-manager .tom-group-config .tom-group-head {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.tom-manager .tom-group-config .tom-group-head input {
+  flex: 1;
+  font-weight: bold;
+}
+
+.tom-manager .tom-group-config .form-group {
+  margin: 0.2rem 0;
+}
+
+.tom-manager .tom-actor-group {
+  flex: 0 0 130px;
+  width: 130px;
+}
+
+.tom-manager .tom-presets input.name {
+  flex: 1;
+}
+
+.tom-manager .tom-presets .tom-add-actor input[type="text"] {
+  flex: 1;
+}
+
+.tom-manager .tom-list li.active {
+  outline: 1px solid var(--color-border-highlight, #ff6400);
+}
+
+.tom-manager .tom-list li.hidden-actor {
+  opacity: 0.5;
+}
+
+.tom-manager .tom-list .thumb {
+  width: 48px;
+  height: 32px;
+  object-fit: cover;
+  border: none;
+  flex: none;
+}
+
+.tom-manager .tom-list .thumb.portrait {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.tom-manager .tom-list .name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tom-manager .tom-list li button,
+.tom-manager .tom-add-actor button {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  line-height: 1;
+}
+
+.tom-manager .tom-add-actor {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tom-manager .tom-add-actor select {
+  flex: 1;
+}
+
+.tom-manager .tom-add-actor button {
+  width: auto;
+  padding: 0 0.75rem;
+}
+
+.tom-manager .range-value {
+  flex: none;
+  width: 4ch;
+  text-align: right;
+}
+
+.tom-manager .tom-fx .form-group {
+  margin: 0.25rem 0;
+}
+
+/* ---- Visual tab grid layout ---- */
+
+.tom-manager .tom-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+  align-items: end;
+}
+
+.tom-manager .tom-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem 1rem;
+  align-items: end;
+}
+
+.tom-manager .tom-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.tom-manager .tom-field > label {
+  font-size: 0.85em;
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tom-manager .tom-field-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tom-manager .tom-field-inline input[type="range"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.tom-manager .tom-checks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem 1rem;
+  margin-top: 0.6rem;
+}
+
+.tom-manager .tom-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95em;
+  cursor: pointer;
+}
+
+.tom-manager .tom-check input[type="checkbox"] {
+  flex: none;
+  margin: 0;
+}
+
+.tom-manager .tom-split-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.tom-manager .tom-split-row button {
+  flex: none;
+  width: auto;
+  padding: 0 0.75rem;
+}
+
+.tom-manager .tom-self-end {
+  align-self: end;
+  padding-bottom: 0.2rem;
+}
+
+.tom-manager .tom-visual fieldset {
+  padding: 0.5rem 0.75rem 0.65rem;
+}
+
+.tom-manager input[type="color"] {
+  height: var(--input-height, 2rem);
+  padding: 2px;
+}

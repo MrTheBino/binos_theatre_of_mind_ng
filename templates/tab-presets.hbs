@@ -1,0 +1,67 @@
+<section class="tab tom-presets {{tab.cssClass}}" data-tab="{{tab.id}}" data-group="{{tab.group}}">
+  {{#if scene}}
+  <div class="tom-grid-2 tom-preset-sources">
+    <fieldset>
+      <legend>{{localize "BTOMNG.Manager.SavePreset"}}</legend>
+      <div class="tom-field">
+        <input type="text" name="_presetName" placeholder="{{localize 'BTOMNG.Manager.PresetName'}}">
+        <button type="button" data-action="savePreset">
+          <i class="fa-solid fa-floppy-disk"></i> {{localize "BTOMNG.Manager.Save"}}
+        </button>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>{{localize "BTOMNG.Manager.CopyFromScene"}}</legend>
+      {{#if tomScenes.length}}
+      <div class="tom-field">
+        <select name="_copyScene">
+          {{#each tomScenes}}
+          <option value="{{id}}">{{name}}</option>
+          {{/each}}
+        </select>
+        <button type="button" data-action="copyScene">
+          <i class="fa-solid fa-copy"></i> {{localize "BTOMNG.Manager.Copy"}}
+        </button>
+      </div>
+      {{else}}
+      <p class="hint">{{localize "BTOMNG.Manager.NoTomScenes"}}</p>
+      {{/if}}
+    </fieldset>
+  </div>
+  <p class="hint">{{localize "BTOMNG.Manager.SavePresetHint"}}</p>
+
+  <fieldset>
+    <legend>{{localize "BTOMNG.Manager.Presets"}}</legend>
+    {{#if presets.length}}
+    <ul class="tom-list">
+      {{#each presets}}
+      <li>
+        <input type="text" class="name" name="presetNames.{{id}}" value="{{name}}">
+        <button type="button" data-action="applyPreset" data-id="{{id}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.ApplyPreset'}}">
+          <i class="fa-solid fa-play"></i>
+        </button>
+        <button type="button" data-action="overwritePreset" data-id="{{id}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.OverwritePreset'}}">
+          <i class="fa-solid fa-floppy-disk"></i>
+        </button>
+        <button type="button" data-action="exportPreset" data-id="{{id}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.ExportPreset'}}">
+          <i class="fa-solid fa-download"></i>
+        </button>
+        <button type="button" data-action="deletePreset" data-id="{{id}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.DeletePreset'}}">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </li>
+      {{/each}}
+    </ul>
+    {{else}}
+    <p class="hint">{{localize "BTOMNG.Manager.NoPresets"}}</p>
+    {{/if}}
+    <button type="button" data-action="importPreset">
+      <i class="fa-solid fa-upload"></i> {{localize "BTOMNG.Manager.ImportPreset"}}
+    </button>
+  </fieldset>
+  {{/if}}
+</section>

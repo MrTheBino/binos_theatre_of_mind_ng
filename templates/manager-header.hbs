@@ -1,0 +1,11 @@
+<header class="tom-header">
+  {{#unless scene}}
+  <p class="notification warning">{{localize "BTOMNG.Manager.NoScene"}}</p>
+  {{else}}
+  <span class="tom-scene-name"><i class="fa-solid fa-map"></i> {{scene.name}}</span>
+  <button type="button" data-action="toggleEnabled" class="tom-enable {{#if config.enabled}}enabled{{/if}}">
+    <i class="fa-solid fa-masks-theater"></i>
+    {{#if config.enabled}}{{localize "BTOMNG.Manager.Deactivate"}}{{else}}{{localize "BTOMNG.Manager.Activate"}}{{/if}}
+  </button>
+  {{/unless}}
+</header>

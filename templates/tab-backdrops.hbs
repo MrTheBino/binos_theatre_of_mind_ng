@@ -1,0 +1,33 @@
+<section class="tab tom-backdrops {{tab.cssClass}}" data-tab="{{tab.id}}" data-group="{{tab.group}}">
+  {{#if scene}}
+  <div class="tom-backdrop-cards">
+    {{#each backdrops}}
+    <div class="tom-backdrop-card {{#if isActive}}active{{/if}}">
+      {{#if isVideo}}
+      <video class="thumb" src="{{src}}" muted loop autoplay></video>
+      {{else}}
+      <img class="thumb" src="{{src}}" alt="{{name}}">
+      {{/if}}
+      <input type="text" class="name" name="backdropNames.{{id}}" value="{{name}}" title="{{src}}">
+      <div class="tom-card-actions">
+        <button type="button" data-action="activateBackdrop" data-id="{{id}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.SetActive'}}" {{#if isActive}}disabled{{/if}}>
+          <i class="fa-solid fa-play"></i>
+        </button>
+        <button type="button" data-action="deleteBackdrop" data-id="{{id}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.Delete'}}">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+    </div>
+    {{/each}}
+    <button type="button" class="tom-backdrop-add" data-action="addBackdrop">
+      <i class="fa-solid fa-plus"></i>
+      <span>{{localize "BTOMNG.Manager.AddBackdrop"}}</span>
+    </button>
+  </div>
+  {{#unless backdrops.length}}
+  <p class="hint">{{localize "BTOMNG.Manager.NoBackdrops"}}</p>
+  {{/unless}}
+  {{/if}}
+</section>

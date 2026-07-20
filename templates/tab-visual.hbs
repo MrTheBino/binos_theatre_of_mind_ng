@@ -1,0 +1,147 @@
+<section class="tab tom-visual {{tab.cssClass}}" data-tab="{{tab.id}}" data-group="{{tab.group}}">
+  {{#if scene}}
+  <fieldset class="tom-layout">
+    <legend>{{localize "BTOMNG.Manager.Layout"}}</legend>
+    <div class="tom-grid-2">
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.Justify"}}</label>
+        <select name="layout.justify">
+          {{#each justifyOptions}}
+          <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.Align"}}</label>
+        <select name="layout.align">
+          {{#each alignOptions}}
+          <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.Size"}}</label>
+        <div class="tom-field-inline">
+          <input type="range" name="layout.size" min="60" max="400" step="10" value="{{config.layout.size}}">
+          <span class="range-value">{{config.layout.size}}px</span>
+        </div>
+      </div>
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.Gap"}}</label>
+        <input type="number" name="layout.gap" min="0" max="200" step="4" value="{{config.layout.gap}}">
+      </div>
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.NameSize"}}</label>
+        <div class="tom-field-inline">
+          <input type="range" name="layout.nameSize" min="8" max="48" step="1" value="{{config.layout.nameSize}}">
+          <span class="range-value">{{config.layout.nameSize}}px</span>
+        </div>
+      </div>
+      <label class="tom-check">
+        <input type="checkbox" name="layout.showNames" {{#if config.layout.showNames}}checked{{/if}}>
+        {{localize "BTOMNG.Manager.ShowNames"}}
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset class="tom-border">
+    <legend>{{localize "BTOMNG.Manager.Border"}}</legend>
+    <div class="tom-grid-3">
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.BorderColor"}}</label>
+        <input type="color" name="border.color" value="{{config.border.color}}">
+      </div>
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.BorderWidth"}}</label>
+        <input type="number" name="border.width" min="0" max="20" step="1" value="{{config.border.width}}">
+      </div>
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.BorderShape"}}</label>
+        <select name="border.shape">
+          {{#each shapeOptions}}
+          <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="tom-fx">
+    <legend>{{localize "BTOMNG.Manager.Fx"}}</legend>
+    <div class="tom-grid-2">
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.FxWeather"}}</label>
+        <select name="fx.weather">
+          {{#each weatherOptions}}
+          <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.FxMood"}}</label>
+        <select name="fx.mood">
+          {{#each moodOptions}}
+          <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+    <div class="tom-checks">
+      <label class="tom-check">
+        <input type="checkbox" name="fx.letterbox" {{#if config.fx.letterbox}}checked{{/if}}>
+        {{localize "BTOMNG.Manager.FxLetterbox"}}
+      </label>
+      <label class="tom-check">
+        <input type="checkbox" name="fx.vignette" {{#if config.fx.vignette}}checked{{/if}}>
+        {{localize "BTOMNG.Manager.FxVignette"}}
+      </label>
+      <label class="tom-check">
+        <input type="checkbox" name="fx.kenburns" {{#if config.fx.kenburns}}checked{{/if}}>
+        {{localize "BTOMNG.Manager.FxKenburns"}}
+      </label>
+      <label class="tom-check">
+        <input type="checkbox" name="fx.grain" {{#if config.fx.grain}}checked{{/if}}>
+        {{localize "BTOMNG.Manager.FxGrain"}}
+      </label>
+      <label class="tom-check">
+        <input type="checkbox" name="fx.parallax" {{#if config.fx.parallax}}checked{{/if}}>
+        {{localize "BTOMNG.Manager.FxParallax"}}
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset class="tom-title-cfg">
+    <legend>{{localize "BTOMNG.Manager.TitleCard"}}</legend>
+    <div class="tom-field">
+      <label>{{localize "BTOMNG.Manager.TitleText"}}</label>
+      <input type="text" name="title.text" value="{{config.title.text}}" placeholder="{{scene.name}}">
+    </div>
+    <div class="tom-split-row">
+      <label class="tom-check">
+        <input type="checkbox" name="title.showOnActivate" {{#if config.title.showOnActivate}}checked{{/if}}>
+        {{localize "BTOMNG.Manager.TitleOnActivate"}}
+      </label>
+      <button type="button" data-action="showTitle">
+        <i class="fa-solid fa-clapperboard"></i> {{localize "BTOMNG.Manager.TitleShow"}}
+      </button>
+    </div>
+  </fieldset>
+
+  <fieldset class="tom-preview-cfg">
+    <legend>{{localize "BTOMNG.Manager.Preview"}}</legend>
+    <div class="tom-grid-2">
+      <label class="tom-check tom-self-end">
+        <input type="checkbox" name="preview.enabled" {{#if config.preview.enabled}}checked{{/if}}>
+        {{localize "BTOMNG.Manager.PreviewEnabled"}}
+      </label>
+      <div class="tom-field">
+        <label>{{localize "BTOMNG.Manager.PreviewDelay"}}</label>
+        <div class="tom-field-inline">
+          <input type="range" name="preview.delay" min="1" max="10" step="0.5" value="{{config.preview.delay}}">
+          <span class="range-value">{{config.preview.delay}}s</span>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+  {{/if}}
+</section>

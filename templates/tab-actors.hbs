@@ -1,0 +1,156 @@
+<section class="tab tom-actors-config {{tab.cssClass}}" data-tab="{{tab.id}}" data-group="{{tab.group}}">
+  {{#if scene}}
+  <fieldset class="tom-groups">
+    <legend>{{localize "BTOMNG.Manager.Groups"}}</legend>
+    {{#each groups}}
+    <div class="tom-group-config">
+      <div class="tom-group-head">
+        <input type="text" name="groupCfg.{{id}}.name" value="{{name}}">
+        <button type="button" data-action="moveGroup" data-id="{{id}}" data-dir="up"
+                {{#if isFirst}}disabled{{/if}} data-tooltip="{{localize 'BTOMNG.Manager.MoveGroupUp'}}">
+          <i class="fa-solid fa-arrow-up"></i>
+        </button>
+        <button type="button" data-action="moveGroup" data-id="{{id}}" data-dir="down"
+                {{#if isLast}}disabled{{/if}} data-tooltip="{{localize 'BTOMNG.Manager.MoveGroupDown'}}">
+          <i class="fa-solid fa-arrow-down"></i>
+        </button>
+        <button type="button" data-action="deleteGroup" data-id="{{id}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.DeleteGroup'}}">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+      <div class="tom-grid-2">
+        <div class="tom-field">
+          <label>{{localize "BTOMNG.Manager.GroupY"}}</label>
+          <div class="tom-field-inline">
+            <input type="range" name="groupCfg.{{id}}.y" min="0" max="100" step="1" value="{{y}}">
+            <span class="range-value">{{y}}%</span>
+          </div>
+        </div>
+        <div class="tom-field">
+          <label>{{localize "BTOMNG.Manager.Justify"}}</label>
+          <select name="groupCfg.{{id}}.justify">
+            {{#each justifyOptions}}
+            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div class="tom-field">
+          <label>{{localize "BTOMNG.Manager.GroupScale"}}</label>
+          <div class="tom-field-inline">
+            <input type="range" name="groupCfg.{{id}}.scale" min="0.5" max="2" step="0.05" value="{{scaleVal}}">
+            <span class="range-value">{{scaleVal}}×</span>
+          </div>
+        </div>
+        <div class="tom-field">
+          <label>{{localize "BTOMNG.Manager.UseCustomColor"}}</label>
+          <div class="tom-field-inline">
+            <input type="checkbox" name="groupCfg.{{id}}.useColor" {{#if useColor}}checked{{/if}}>
+            <input type="color" name="groupCfg.{{id}}.color" value="{{colorVal}}" {{#unless useColor}}disabled{{/unless}}>
+          </div>
+        </div>
+      </div>
+      <label class="tom-check">
+        <input type="checkbox" name="groupCfg.{{id}}.showLabel" {{#if showLabel}}checked{{/if}}>
+        {{localize "BTOMNG.Manager.GroupShowLabel"}}
+      </label>
+    </div>
+    {{/each}}
+    <button type="button" data-action="addGroup">
+      <i class="fa-solid fa-plus"></i> {{localize "BTOMNG.Manager.AddGroup"}}
+    </button>
+  </fieldset>
+  {{#if actors.length}}
+  <ul class="tom-list">
+    {{#each actors}}
+    <li class="{{#if hidden}}hidden-actor{{/if}} {{#if speaking}}is-speaking{{/if}}">
+      <div class="tom-actor-row">
+        <img class="thumb portrait" src="{{thumb}}" alt="{{name}}">
+        <span class="name">{{name}}</span>
+        <select name="actorCfg.{{id}}.groupId" class="tom-actor-group"
+                data-tooltip="{{localize 'BTOMNG.Manager.ActorGroup'}}">
+          <option value="">{{localize "BTOMNG.Manager.GroupNone"}}</option>
+          {{#each groupOptions}}
+          <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+          {{/each}}
+        </select>
+        <button type="button" data-action="toggleSpeaking" data-id="{{id}}"
+                class="{{#if speaking}}active{{/if}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.ToggleSpeaking'}}">
+          <i class="fa-solid fa-comment"></i>
+        </button>
+        <button type="button" data-action="moveActor" data-id="{{id}}" data-dir="up"
+                {{#if isFirst}}disabled{{/if}} data-tooltip="{{localize 'BTOMNG.Manager.MoveUp'}}">
+          <i class="fa-solid fa-arrow-up"></i>
+        </button>
+        <button type="button" data-action="moveActor" data-id="{{id}}" data-dir="down"
+                {{#if isLast}}disabled{{/if}} data-tooltip="{{localize 'BTOMNG.Manager.MoveDown'}}">
+          <i class="fa-solid fa-arrow-down"></i>
+        </button>
+        <button type="button" data-action="toggleActorHidden" data-id="{{id}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.ToggleHidden'}}">
+          <i class="fa-solid {{#if hidden}}fa-eye-slash{{else}}fa-eye{{/if}}"></i>
+        </button>
+        <button type="button" data-action="toggleExpand" data-id="{{id}}"
+                class="{{#if expanded}}active{{/if}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.ActorSettings'}}">
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+        <button type="button" data-action="removeActor" data-id="{{id}}"
+                data-tooltip="{{localize 'BTOMNG.Manager.Remove'}}">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </div>
+      {{#if expanded}}
+      <div class="tom-actor-details">
+        <div class="tom-grid-2">
+          <div class="tom-field">
+            <label>{{localize "BTOMNG.Manager.CustomImage"}}</label>
+            <div class="tom-field-inline">
+              <button type="button" data-action="pickActorImage" data-id="{{id}}">
+                <i class="fa-solid fa-image"></i> {{localize "BTOMNG.Manager.PickImage"}}
+              </button>
+              {{#if img}}
+              <button type="button" data-action="clearActorImage" data-id="{{id}}"
+                      data-tooltip="{{localize 'BTOMNG.Manager.ClearImage'}}">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+              {{/if}}
+            </div>
+          </div>
+          <div class="tom-field">
+            <label>{{localize "BTOMNG.Manager.UseCustomColor"}}</label>
+            <div class="tom-field-inline">
+              <input type="checkbox" name="actorCfg.{{id}}.useColor" {{#if useColor}}checked{{/if}}>
+              <input type="color" name="actorCfg.{{id}}.color" value="{{colorVal}}" {{#unless useColor}}disabled{{/unless}}>
+            </div>
+          </div>
+          <div class="tom-field">
+            <label>{{localize "BTOMNG.Manager.ActorScale"}}</label>
+            <div class="tom-field-inline">
+              <input type="range" name="actorCfg.{{id}}.scale" min="0.5" max="2" step="0.05" value="{{scaleVal}}">
+              <span class="range-value">{{scaleVal}}×</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <p class="hint">{{localize "BTOMNG.Manager.NoActors"}}</p>
+  {{/if}}
+  <p class="hint tom-drop-hint"><i class="fa-solid fa-hand-pointer"></i> {{localize "BTOMNG.Manager.DropHint"}}</p>
+  <div class="tom-add-actor">
+    <select name="_actorToAdd">
+      {{#each worldActors}}
+      <option value="{{uuid}}">{{name}}</option>
+      {{/each}}
+    </select>
+    <button type="button" data-action="addActor">
+      <i class="fa-solid fa-plus"></i> {{localize "BTOMNG.Manager.AddActor"}}
+    </button>
+  </div>
+  {{/if}}
+</section>

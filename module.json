@@ -1,0 +1,39 @@
+{
+  "id": "binos_theatre_of_mind_ng",
+  "title": "Bino's Theatre Of Mind NG",
+  "description": "System-agnostic theatre of mind mode: image or video backdrops with actor portraits drawn over the active scene.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Bino"
+    }
+  ],
+  "url": "https://github.com/MrTheBino/binos_theatre_of_mind_ng",
+  "manifest": "https://github.com/MrTheBino/binos_theatre_of_mind_ng/releases/latest/download/module.json",
+  "download": "https://github.com/MrTheBino/binos_theatre_of_mind_ng/releases/download/v0.1.0/module.zip",
+  "readme": "https://github.com/MrTheBino/binos_theatre_of_mind_ng/blob/main/README.md",
+  "bugs": "https://github.com/MrTheBino/binos_theatre_of_mind_ng/issues",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14",
+    "maximum": ""
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/theatre.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json"
+    }
+  ]
+}
